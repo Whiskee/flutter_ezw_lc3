@@ -1,0 +1,15 @@
+# 执行 fvm dart  run ffigen --config ffigen.yaml 创建lc3_ffi.dart
+output: lib/lc3_ffi.dart
+name: Lc3Bindings
+description: FFI bindings for LC3 codec
+headers:
+  entry-points:
+    - lib/lc3_include/lc3.h
+  include-directives:
+    - '**lc3.h'
+    - '**lc3_private.h'
+    - '**lc3_cpp.h'
+compiler-opts:
+  - '-Ilib/lc3_include'
+# 不展示枚举警告
+silence-enum-warning: true

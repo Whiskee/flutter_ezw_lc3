@@ -1,0 +1,20 @@
+{
+  "buildFiles": [
+    "/Users/edy/Software/Google/Fvm/versions/3.29.2/packages/flutter_tools/gradle/src/main/groovy/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/edy/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Users/edy/Workspace/FZFStudio/flutter_ezw_lc3/example/android/app/.cxx/Debug/251z1y13/x86",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/edy/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Users/edy/Workspace/FZFStudio/flutter_ezw_lc3/example/android/app/.cxx/Debug/251z1y13/x86",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {}
+}
