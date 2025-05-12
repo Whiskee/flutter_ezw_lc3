@@ -87,8 +87,13 @@ class Lc3Encoder {
       throw StateError('Encoder not initialized');
     }
 
-    return _lc3.lc3_encode(_encoder, pcmFormat, pcm, stride, nBytes, out.cast<Void>());
+    return _lc3.lc3_encode(
+        _encoder, pcmFormat, pcm, stride, nBytes, out.cast<Void>());
   }
+
+  int frameSamples() => hrMode
+      ? _lc3.lc3_hr_frame_samples(hrMode, dtUs, srHz)
+      : _lc3.lc3_frame_samples(dtUs, srHz);
 
   void dispose() {
     if (_initialized) {
@@ -192,6 +197,10 @@ class Lc3Decoder {
       stride,
     );
   }
+
+  int frameSamples() => hrMode
+      ? _lc3.lc3_hr_frame_samples(hrMode, dtUs, srHz)
+      : _lc3.lc3_frame_samples(dtUs, srHz);
 
   void dispose() {
     if (_initialized) {

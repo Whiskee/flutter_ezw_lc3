@@ -30,3 +30,6 @@ build/
 
 # FVM Version Cache
 .fvm/
+
+# Ignore example Android C++ build files
+example/android/app/.cxx/
