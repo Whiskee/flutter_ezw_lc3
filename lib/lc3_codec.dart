@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter_ezw_lc3/lc3_ffi.dart';
@@ -34,48 +35,47 @@ Future<Uint8List?> encodeLc3({
   int frameBytes = 20,
 }) async {
   try {
-    // 1. 初始化编码参数
-    // 1.1 计算编码器内存需求
+    //  1. 初始化编码参数
+    //  - 1.1 计算编码器内存需求
     final encodeSize = _lc3.lc3_encoder_size(dtUs, srHz);
-    // 1.2 获取每帧采样数
+    //  - 1.2 获取每帧采样数
     final samplesPerFrame = _lc3.lc3_frame_samples(dtUs, srHz);
-
-    // 2. 参数验证
-    // 2.1 校验帧字节数范围（16kbps-320kbps）
+    //  2. 参数验证
+    //  - 2.1 校验帧字节数范围（16kbps-320kbps）
     if (frameBytes < _lc3.lc3_hr_frame_bytes(false, dtUs, srHz, 16000) ||
         frameBytes > _lc3.lc3_hr_frame_bytes(false, dtUs, srHz, 320000)) {
       log("Lc3Codec::Encode - Invalid frameBytes: $frameBytes");
       return null;
     }
-    // 3. 内存分配
-    // 3.1 编码器实例内存
+    //  3. 内存分配
+    //  - 3.1 编码器实例内存
     final encMem = calloc<Uint8>(encodeSize);
-    // 3.2 初始化编码器实例
+    //  - 3.2 初始化编码器实例
     final lc3Encoder =
         _lc3.lc3_setup_encoder(dtUs, srHz, 0, encMem.cast<Void>());
-    // Allocate encode buffers
+    //  Allocate encode buffers
     final inBuf = calloc<Int16>(samplesPerFrame);
     final outBuf = calloc<Uint8>(frameBytes);
-    // Prepare output buffer
+    //  Prepare output buffer
     final encodedData =
         Uint8List(pcmBytes.length ~/ (samplesPerFrame * 2) * frameBytes);
     var encodedOffset = 0;
     var pcmOffset = 0;
     while (pcmOffset < pcmBytes.length) {
-      // 4. 帧数据处理
-      // 4.1 检查剩余采样是否足够组成完整帧
+      //  4. 帧数据处理
+      //  - 4.1 检查剩余采样是否足够组成完整帧
       final remainingSamples = (pcmBytes.length - pcmOffset) ~/ 2;
       if (remainingSamples < samplesPerFrame) {
         log("Lc3Codec::Encode - Incomplete PCM frame (${remainingSamples}samples)");
         break;
       }
-      // Load PCM samples to input buffer
+      //  Load PCM samples to input buffer
       final pcmChunk =
           pcmBytes.buffer.asInt16List(pcmOffset ~/ 2, samplesPerFrame);
       inBuf.asTypedList(samplesPerFrame).setAll(0, pcmChunk);
-      // Perform LC3 encoding
-      // 5. 执行编码
-      // 5.1 调用LC3原生编码接口
+      //  Perform LC3 encoding
+      //  5. 执行编码
+      //  - 5.1 调用LC3原生编码接口
       final result = _lc3.lc3_encode(
         lc3Encoder,
         lc3_pcm_format.LC3_PCM_FORMAT_S16,
@@ -119,6 +119,7 @@ Future<Uint8List?> encodeLc3({
 /// - dtUs: 帧长度，单位为微秒，默认10000（10ms）
 /// - srHz: 采样率，默认16000（16kHz）
 /// - outputByteCount: 每帧编码后的字节数，默认20
+/// - isLittleEndian: 是否是小端序，默认false
 ///
 /// 返回:
 /// - 解码后的 PCM 数据，如果解码失败则返回 null
@@ -127,25 +128,26 @@ Future<Uint8List?> decodeLc3({
   int dtUs = 10000,
   int srHz = 16000,
   int outputByteCount = 20,
+  bool isLittleEndian = false,
 }) async {
   try {
-    // 计算解码器大小和每帧采样数
+    //  1、计算解码器大小和每帧采样数
     final decodeSize = _lc3.lc3_decoder_size(dtUs, srHz);
     final sampleOfFrames = _lc3.lc3_frame_samples(dtUs, srHz);
     final bytesOfFrames = sampleOfFrames * 2; // 16位采样，每个采样2字节
-    // 分配解码器内存
+    //  2、分配解码器内存
     final decMem = calloc<Uint8>(decodeSize);
     final lc3Decoder =
         _lc3.lc3_setup_decoder(dtUs, srHz, 0, decMem.cast<Void>());
-    // 分配输出缓冲区
+    //  - 2.1、分配输出缓冲区
     final outBuf = calloc<Uint8>(bytesOfFrames);
-    // 计算总字节数和已读取字节数
+    //  3、计算总字节数和已读取字节数
     final totalBytes = streamBytes.length;
     var bytesRead = 0;
-    // 创建输出数据
+    //  4、创建输出数据
     final pcmData = Uint8List(totalBytes * bytesOfFrames ~/ outputByteCount);
     var pcmOffset = 0;
-    // 逐帧解码
+    //  5、逐帧解码
     while (bytesRead < totalBytes) {
       // 计算当前帧要读取的字节数
       final bytesToRead = math.min(outputByteCount, totalBytes - bytesRead);
@@ -172,19 +174,38 @@ Future<Uint8List?> decodeLc3({
         calloc.free(decMem);
         return null;
       }
-      // 将解码后的数据复制到输出缓冲区
+      //  - 6.1、获取解码数据
       final decodedFrame = outBuf.asTypedList(bytesOfFrames);
-      pcmData.setRange(pcmOffset, pcmOffset + bytesOfFrames, decodedFrame);
-      // 释放输入缓冲区
+      //  - 6.2、如果需要转换字节序
+      if (isLittleEndian) {
+        //  - 6.2.1、将字节数组转换为Int16List以便进行字节序转换
+        final int16Data = Int16List.view(decodedFrame.buffer);
+        final convertedData = Uint8List(bytesOfFrames);
+        //  - 6.2.2、手动交换字节序（小端序转大端序）
+        for (var i = 0; i < int16Data.length; i++) {
+          final value = int16Data[i];
+          // 在小端序中，低位字节在前，高位字节在后
+          // 所以直接使用原始字节顺序即可
+          convertedData[i * 2] = value & 0xFF; // 低位字节
+          convertedData[i * 2 + 1] = (value >> 8) & 0xFF; // 高位字节
+        }
+        //  - 6.2.3、将转换后的数据复制到输出缓冲区
+        pcmData.setRange(pcmOffset, pcmOffset + bytesOfFrames, convertedData);
+      }
+      //  - 6.3、如果不需要则直接复制数据
+      else {
+        pcmData.setRange(pcmOffset, pcmOffset + bytesOfFrames, decodedFrame);
+      }
+      //  - 6.3、释放输入缓冲区
       calloc.free(inBuf);
-      // 更新偏移量
+      //  - 6.4、更新偏移量
       bytesRead += bytesToRead;
       pcmOffset += bytesOfFrames;
     }
-    // 释放资源
+    //  7、释放资源
     calloc.free(outBuf);
     calloc.free(decMem);
-    // 返回解码后的 PCM 数据（裁剪到实际大小）
+    //  8、返回解码后的 PCM 数据（裁剪到实际大小）
     return pcmData.sublist(0, pcmOffset);
   } catch (e) {
     log("Lc3Codec::Decode - Error: $e");
