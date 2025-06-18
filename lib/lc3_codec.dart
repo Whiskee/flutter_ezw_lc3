@@ -3,7 +3,6 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
-import 'dart:convert';
 
 import 'package:ffi/ffi.dart';
 import 'package:flutter_ezw_lc3/lc3_ffi.dart';
