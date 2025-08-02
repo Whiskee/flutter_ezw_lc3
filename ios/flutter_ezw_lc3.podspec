@@ -21,6 +21,7 @@ A new Flutter plugin project.
   s.static_framework = true
   # - 添加liblc3.a库
   s.vendored_libraries = 'Classes/framework/liblc3.dylib'
+  s.preserve_paths = 'Classes/framework/liblc3.dylib.dSYM'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = {
@@ -28,7 +29,11 @@ A new Flutter plugin project.
     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386',
     'OTHER_LDFLAGS' => '-force_load $(PODS_TARGET_SRCROOT)/Classes/framework/liblc3.dylib',
     'SWIFT_VERSION' => '5.0',
-    'CLANG_ENABLE_MODULES' => 'YES'
+    'CLANG_ENABLE_MODULES' => 'YES',
+    'GENERATE_DEBUG_SYMBOLS' => 'YES',
+    'STRIP_INSTALLED_PRODUCT' => 'NO',
+    'COPY_PHASE_STRIP' => 'NO',
+    'DEBUG_INFORMATION_FORMAT' => 'dwarf-with-dsym'
   }
   s.swift_version = '5.0'
 
