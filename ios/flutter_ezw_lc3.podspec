@@ -18,7 +18,7 @@ A new Flutter plugin project.
   s.platform = :ios, '12.0'
   # 添加liblc3相关库内容
   # - 实现静态库
-  s.static_framework = true
+  s.static_framework = false
   # - 添加liblc3.a库，支持不同架构
   s.vendored_libraries = 'Classes/framework/liblc3.a'
   
