@@ -26,7 +26,9 @@ A new Flutter plugin project.
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES', 
     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386',
-    'OTHER_LDFLAGS' => '-force_load $(PODS_TARGET_SRCROOT)/Classes/framework/liblc3.dylib'
+    'OTHER_LDFLAGS' => '-force_load $(PODS_TARGET_SRCROOT)/Classes/framework/liblc3.dylib',
+    'SWIFT_VERSION' => '5.0',
+    'CLANG_ENABLE_MODULES' => 'YES'
   }
   s.swift_version = '5.0'
 
