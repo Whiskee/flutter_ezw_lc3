@@ -13,27 +13,27 @@ A new Flutter plugin project.
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'FZFStudio' => 'whiskee.chen@fzfstudio.com' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*.{h,m,swift}'
+  s.source_files = 'Classes/**/*.{h,m,swift,c}'
   s.dependency 'Flutter'
   s.platform = :ios, '12.0'
   # 添加liblc3相关库内容
   # - 实现静态库
   s.static_framework = true
-  # - 添加liblc3.a库
-  s.vendored_libraries = 'Classes/framework/liblc3.dylib'
-  s.preserve_paths = 'Classes/framework/liblc3.dylib.dSYM'
+  # - 添加liblc3.a库，支持不同架构
+  s.vendored_libraries = 'Classes/framework/liblc3.a'
+  
+  # 配置架构特定的库路径（如果需要分离的架构文件）
+  # s.ios.vendored_libraries = 'Classes/framework/arm64/liblc3.a'
+  # s.ios.sim.vendored_libraries = 'Classes/framework/x86_64/liblc3.a'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES', 
     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386',
-    'OTHER_LDFLAGS' => '-force_load $(PODS_TARGET_SRCROOT)/Classes/framework/liblc3.dylib',
-    'SWIFT_VERSION' => '5.0',
-    'CLANG_ENABLE_MODULES' => 'YES',
-    'GENERATE_DEBUG_SYMBOLS' => 'YES',
-    'STRIP_INSTALLED_PRODUCT' => 'NO',
-    'COPY_PHASE_STRIP' => 'NO',
-    'DEBUG_INFORMATION_FORMAT' => 'dwarf-with-dsym'
+    'OTHER_LDFLAGS' => '-force_load $(PODS_TARGET_SRCROOT)/Classes/framework/liblc3.a',
+    'GCC_SYMBOLS_PRIVATE_EXTERN' => 'NO',
+    'DEAD_CODE_STRIPPING' => 'NO',
+    'HEADER_SEARCH_PATHS' => '"$(PODS_TARGET_SRCROOT)/Classes"',
   }
   s.swift_version = '5.0'
 
