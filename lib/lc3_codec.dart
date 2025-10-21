@@ -187,7 +187,7 @@ Future<Uint8List?> decodeLc3({
       }
       // 解码当前帧
       final result = _lc3.lc3_decode(
-        lc3Decoder,
+        _lc3Decoder!,
         inBuf.cast<Void>(),
         bytesToRead,
         lc3_pcm_format.LC3_PCM_FORMAT_S16,
@@ -198,7 +198,7 @@ Future<Uint8List?> decodeLc3({
         log("Lc3Codec::Decode - Error:FFI decoding failed: $result");
         calloc.free(inBuf);
         calloc.free(outBuf);
-        calloc.free(decMem);
+        calloc.free(_decMem!);
         return null;
       }
       //  - 6.1、获取解码数据
@@ -231,7 +231,7 @@ Future<Uint8List?> decodeLc3({
     }
     //  7、释放资源
     calloc.free(outBuf);
-    calloc.free(decMem);
+    calloc.free(_decMem!);
     //  8、返回解码后的 PCM 数据（裁剪到实际大小）
     return pcmData.sublist(0, pcmOffset);
   } catch (e) {
